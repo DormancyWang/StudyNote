@@ -40,7 +40,7 @@ java com.exmple.
 23. java注释简略 @param @return @throws @author @version @deprecated @see reference
 ### 继承 is-a
 1. 覆盖(override)  
-2. 子类不能访问父类的私有对象，只有父类的相同的类可以
+2. 子类不能访问父类的私有对象(private)，只有父类的相同的类可以
 3. super关键字，特指父类的方法。与this不一样。只是一种标记，而this是一个对象引用  
 4. 继承层次，继承链  
 ### 多态  一个父类对象可以是一个父类也可以是子类对象
@@ -50,5 +50,25 @@ java com.exmple.
 4. 对象的强制类型转换。只能子类转父类（默认的，也不需要标出），子类还原成子类。错误信息ClassCastException异常  
 5. instanceof() 运算符
 6. 抽象类,抽象方法 abstract - 只将他作为派生其他类的模板，而不产生实例  
-7. 
+7. >private  
+>default(本包)  
+>protected(本包加子类)  
+>public  
+>(访问控制逐渐开放)  
+8. *Object*-所有类的超类
+9. object的方法：  
+>equals()  
+>HashCode() *(重写完equals方法必须重写hashcode，Case Override only equals: two same object will have different hashcode = same objects go in different bucket(duplication). ），so equals must act the same as HashCode---when equals show two object are same,their HashCode must be the same* 
+toString()  
+Class getClass()  
+Object clone()  
+java.lang.Class  
+	String getName()  
+	Class getSuperclass()  
+10. ArrayList<>()，泛型，ensureCapacity(),trimToSize()  
+11. 对象包装器和自动打包autoboxing,自动拆包。比如在自增的时候是先拆包再自增再打包的。这样容易造成包装器和值相同的假象。比如 判断相等，包装器在一定数值内(-128-127)是使用对象池的 所以可以用 == 判断是否相等，其实是判断是不是一个对象，但是数值太大的时候一定要用.equals()    Void,Boolean。基本数据类型的包装类都是继承自公共超类Number. 1.他们是不可改变的 2.不能继承或更改  
+12. //todo org.omg.CORBA holder,intHolder  
+13. 包装器内有一些常见的处理对应数值的方法  
+14. 形参数量可变的方法 eg: public PrintStream printf(Sring fmt,Object... args){return format(fmt,args)}  
+15. 
 
