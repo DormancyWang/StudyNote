@@ -254,3 +254,135 @@ from/ where/ group by having /select/ order by / limit
 
 #### DCL
 control 
+
+**用户创建**
+查询用户 
+use mysql  
+select * from user;
+
+创建用户
+create user '用户名'@'主机名' identified by '密码'
+
+修改用户密码
+alter user '用户名'@'主机名' identified with mysql_native_password by '新密码'；
+
+drop user 用户名@主机名
+
+**权限控制**
+
+|权限|说明|
+|-|-|
+|ALL,ALL PRIVILEGES|所有权限|
+|select|插入数据|
+|insert
+|update
+|delete
+|alter
+|drop| 删除数据库，表，视图
+|create
+
+查询权限
+show grants for 用户名
+
+GRANT 权限列表 on 数据库.表名 to 用户
+
+revoke 权限列表 on 数据库.表名 from 用户
+
+
+## 函数
+
+字符串函数
+
+| 函数 | 功能 |
+|-|-|
+|concat|链接
+|lower
+|upper
+|lpad(str,n,pad)|左填充，达到n个字符串长度
+|rpad(str,n,pad)|右填充
+|trim
+|substring
+
+
+数值函数
+
+| 函数 | 功能 |
+|-|-|
+|ceil(x)|向上取整
+|floor(x)|向下
+|mod(x,y)
+|rand()|0-1
+|round(x,y)|四舍五入，保留y位小数
+
+生成六位随机验证码
+
+日期函数
+curdate()
+curtime()
+now()
+year()
+month()
+day()
+date()\_add
+datediff()
+
+流程控制函数
+if(value,t,f)
+ifnull(value1,value2)
+case when [val1] then [res1] ....else [default] end;
+case [exper] when [val1] then [res1] ... else [default] end;
+
+## 约束
+作用于表中字段的规则，限制存储在表中的数据
+目的是保证数据库中的数据的正确有效性完整性
+
+not null  
+unique  
+primary key  
+default  
+check  
+foreign key   两张表之间建立链接 保证数据的一致性和完整性 
+
+创建外键
+create table 表名(
+	字段名 数据类型
+	[constriant] 外键名称 foreign key(外键字段名) references 主表(主表列名)
+);
+修改外键
+alter table 表名 add constaint 外键名称 foreign key (外键字段名) references 主表(主表列名);
+
+去除外键
+alter table 表名 drop foreign key 外键名称;
+
+
+删除更新行为
+no action  
+restrict  上面两个相等，删除父表中的记录时，判断有没有外键与之相连，有的的话就不允许删除更新  
+
+cascade  有的话也把子表中的记录删除或者更新  
+set null  有的话将子表设置为null  (前提外键允许被设为null)
+set default  有的话将子表设置为default值 （Innodb不支持）
+
+alter talbe 表名 add constraint 外键名称 foreign key 外键字段 references 主表名(主表字段名) on update cascade on delete cascade;
+
+#### 多表查询
+
+##### 多表关系
+一对多  
+多对多  通过中间表来实现关系  
+多对一  
+一对一  用于单表的拆分，基础字段放在一张表中，其他字段放在另一张表中。
+
+##### 多表查询
+select * from emp, dept ; 笛卡尔积 所有的组合情况
+
+链接查询
+	内连接
+	外链接
+		左外链接
+		右外链接
+	自连接
+子查询
+
+隐式内连接 select 字段列表 from 表1，表2 where 条件
+
