@@ -111,9 +111,10 @@ class myBST{
   所以使用递归，在递归调用前记录，递归调用结束后删除，这样可以实现回溯。
   对于输出多条路径啊（其他的暂时没想到）的问题就比较合适。
 2. 广度优先搜索(breadthFirstSearch)  
-3. prim (并查集)  
-4. kruscal  
+3. prim 
+4. kruscal (并查集) 
 5. djkstra  
+	一个visited[] 一个dis[],dis设置为开始节点,找到最小的,更新,循环
 6. floid  
 8. 拓扑排序  
 ### 题目  
