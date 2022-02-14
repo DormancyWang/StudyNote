@@ -7,7 +7,8 @@ String 不可修改，只能新建
 String 判断相等用equals（） 不可用 ==，因为只有字符串常量是共享的。  
 代码点和代码单元： 常用的Unicode字符可用一个代码单元表示，辅助字符需要一对代码单元表示。length() 方法是获取代码单元的方法。codePointCount()获取代码单元数量。Character.isSupplementaryCodePoin()  
 4. 文件的输入输出   
-5. java 数组允许为0，与null不同  
+5. java 数组允许为0，与null不同 
+6. 数组就是对象 [java 数组详解][https://dunwu.github.io/javacore/basics/java-array.html] 
 ### 对象和类
 1. 面向对象程序设计  
 2. 类，封装，状态(state，实例域的集合)  

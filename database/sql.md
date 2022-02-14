@@ -376,13 +376,158 @@ alter talbe 表名 add constraint 外键名称 foreign key 外键字段 referenc
 ##### 多表查询
 select * from emp, dept ; 笛卡尔积 所有的组合情况
 
+在笛卡尔积上进行取舍就有了所谓内连接，外链接，自连接。。。
 链接查询
-	内连接
+	内连接 select ... from ... [inner join] ... on ...
 	外链接
-		左外链接
-		右外链接
-	自连接
-子查询
+		左外链接 select ... from ... [left outer join] ... on ...
+		右外链接 select ... from ... [right outer join] ... on ...
+	自连接 select 字段列表 from 表A 别名A join 表A 别名B on 条件  查询自己的领导是谁
 
+联合查询-union,union all
+select ... from A ...
+union [all]
+select ... from B ...;
+列数要匹配
+
+子查询-嵌套查询
+select * from t1 where column1 = (select column1 from t2);
+
+标量  
+列  in/not in /any满足任何一个就可以 / some满足一些 / all都满足
+行  =/<>/in /not in
+表  
+
+
+	
 隐式内连接 select 字段列表 from 表1，表2 where 条件
+
+显示内连接 select 字段列表 from 表1 [inner] join 表2 on 链接条件...;
+
+
+## 事务
+操作的集合，要么都做，要么都不做 
+mysql的事务是自动提交的
+
+select @@autocommit
+set @@autocommit = 0;
+
+commit
+
+rollback
+
+//不修改自动提交
+start transaction / beign;
+commit
+rollback
+
+事务的四大特性 ：
+	原子性 
+	一致性 所有数据应该保持一致
+	隔离性 事务之间互相不影响
+	持久性 改变是永久的
+	acid
+
+并发事务问题
+
+脏读 一个事务读取到另外一个事务没有提交的数据
+不可重复读 两个事务读取的数据不同
+幻读 查询的时候没有，插入的时候有了
+
+[一个小疑问][https://segmentfault.com/q/1010000014365001]
+
+事务的隔离界别
+
+|隔离级别|脏读|不可重复读|幻读|
+|-|-|-|-
+|
+|read uncommited| y| y |y
+|read committed(orcal default) |n |y |y| 
+|repeatable read(default) |n| n |y |
+serializable |n |n |n|
+
+并发性能递减
+select @@transaction_isolation
+set [session|global] transaction isolation level {read uncommited|read committed | repeatable read|serializable}
+
+
+
+
+## 中级
+1. 存储引擎  
+2. 索引  
+3. sql优化  
+4. 视图、存储过程，触发器
+5. 锁
+6. innodb
+7. mysql管理
+ 
+### 存储引擎
+不同的引擎有不同的适用场景，没有好坏之分
+存储引擎 就是 存储数据 建立索引 更新/查询数据等技术的实现方式 引擎是基于表的，而不是基于库的，所以存储引擎也被成为表引擎
+
+默认innodb/ engin = innodb
+
+show engines
+几个需要知道的
+
+
+
+myisam : 早期默认，不支持事务，不支持外键，支持表锁，不支持行锁，访问所读快
+.MYD数据/.MYI索引/.sdi结构
+
+innodb : 高可靠，高性能。 dml 支持acid 支持事务 行级锁， foreign key
+	文件 xxxx.ibd 存放了，表结构(frm -> sdi)，数据，索引  innodb_file_per_talbe  
+
+									逻辑存储结构
+	TableSpace：
+	Segment
+	Extent :  1M 
+	Page : 基本单元,16k
+	Row ： trx id,roll pointer,col...
+
+
+
+memory ： 存储在内存当中，临时表，或者缓存
+内存存放 hash索引
+
+
+
+innodb myisam（nosql mangodb redis) 区别： 事务 外键 锁 
+
+#### 索引
+
+帮助mysql高效获取数据的 数据结构
+提高了检索效率 降低了io成本    索引也占用空间
+降低数据排序成本，抵消CPU消耗     大大提高了查询效率，降低了更新表的速度
+
+索引在存储引擎结构层实现 ，引擎不同索引不同
+
+B+ Tree              最常见
+Hash 　　　　　：　　　精确匹配才有效，不支持查询范围
+R-tree (空间索引)　　特殊索引MyISAM 索引，主要用于地理空间数据类型
+Full-text （全文索引）    倒排索引 ，lucene，solr，es
+
+
+二叉树 容易退化
+红黑树 层级也较深
+b树 多路（一个节点可以包含多个数据）平衡查找树
+
+hash索引是memory引擎的东西，innodb有自适应的hash功能，hash索引根据b+tree索引在特定条件下构建而成。
+
+索引分类
+主键索引
+唯一索引
+常规索引
+全文索引
+
+
+聚集索引clustered index
+二级索引secondary index
+聚集索引的创建规则
+主键->第一个唯一索引-> rowid 作为隐藏的聚集索引
+
+
+
+
 
