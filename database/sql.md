@@ -495,7 +495,7 @@ memory ： 存储在内存当中，临时表，或者缓存
 
 innodb myisam（nosql mangodb redis) 区别： 事务 外键 锁 
 
-#### 索引
+## 索引
 
 帮助mysql高效获取数据的 数据结构
 提高了检索效率 降低了io成本    索引也占用空间
@@ -519,15 +519,305 @@ hash索引是memory引擎的东西，innodb有自适应的hash功能，hash索�
 主键索引
 唯一索引
 常规索引
-全文索引
+全文索引  
+https://stackoverflow.com/questions/707874/differences-between-index-primary-unique-fulltext-in-mysql  
 
 
-聚集索引clustered index
-二级索引secondary index
+
+聚集索引clustered index 保存的具体的存储位置
+二级索引secondary index 保存者聚集索引
 聚集索引的创建规则
 主键->第一个唯一索引-> rowid 作为隐藏的聚集索引
 
+回表查询
+innodb指针占用6个字节
+
+create [unique|fulltext] index name on table_name (index_col_name...)
+
+show index from table_name
+
+drop index name on table_name
+
+#### sql性能优化
+1. sql执行频率
+show session|global status Com_...;
+
+2. 慢查询日志
+show variables like 'slow_query_log'
+long_query_time
+/var/lib/mysql/localhost-slow.log
+
+3. show profiles
+have_profiling参数
+@@profiling
+
+show profiles;
+show profile for query query_id
+show profile cup for query query_id
+
+4. explain执行计划
+  
+explain / desc 获取命令执行的信息
+explain select ... from ... where ...
+
+id: select操作顺序，嵌套查询，多表查询啥的分开给你显示，id大的先执行   
+select_type : simple ， primary 主查询，外层查询 /union，subquery
+type： null（不访问表）,system（系统表）,const（主键）（唯一索引访问）,eq_ref,ref（非唯一性索引）,range,index（用了索引，但是遍历所有索引树）,all 由好到差   
+possible_key  ： 可能用到的索引
+
+key：实际用到的索引  
+
+key_len: 使用到索引的字节数，并非实际的使用长度，越短越好
+
+row：必须查询的行数，预估值
+
+filtered ： 返回行数占总读取行数的百分比 
+
+id相同从上到下  
+
+索引的使用原则
+1. （复合索引）最左前缀法则： 索引了多列 需要遵守，查询不能跳列，跳过的列的后面的索引会失效  
+2. 范围查询（复合索引）：范围查询右边的索引会失效 >=不会失效
+3. 索引运算会失效
+4. 字符串类型不加单引号索引失效
+5. 模糊查询： 仅尾部进行模糊匹配索引不会失效
+6. or链接条件，都有索引才会生效
+7. 数据分布影响，mysql会评估使用索引慢就用全表扫描
+8. sql提示 多个索引都匹配，可以指定索引
+
+use index 建议
+ignore index  
+force index 强迫
+
+9. 覆盖索引 ，尽量不要用select * 。 选择的尽量在索引里。是否需要回表查询
+10. 前缀索引，对于字符串，文本的设计的索引，大大节省索引空间。
+create index idx_xxxx on table_name(column(n));
+关于长度 选择性，不重复的值
+select count(distinct name)/ count(\*) from tb_user;
+select count(distinct substring(email,1,5))/count(\*) from tb_user;
+
+11. 单列索引和联合索引的选择问题  
+ 最好使用单列索引
 
 
+索引的设计原则
+1. 数据量大，查询比较频繁的表
+2. 常作为 where,order,group by 操作的字段
+3. 尽量选择区分度高，尽量建立唯一索引。
+4. 根据字段特点，建立前缀索引
+5. 尽量建立联合索引，减少单列索引，查询时联合索引很多时候可以覆盖索引，节省 存储空间。
+6. 需要控制索引数量，并不是越多越好，会影响增删改的速度
+7. 索引列不能存储null值，创建表的时候应该标明
+
+
+### 其他sql语句的优化
+1. 使用批量插入，几千条
+2. 手动提交事务
+3. 主键顺序插入
+4. 大批量的数据插入 Load
+mysql --local-infile -u root -p
+set global local_infile = 1;
+load data local infile (path) fields terminated by '' lines terminated by ''  
+
+#### 主键优化
+索引组织表(index organized table IOT)
+
+一页至少包含两行数据/行溢出
+底层类似数组，不是顺序存入需要频繁移动   
+
+页分裂
+页合并  页中删除的行数据达到特定值 (merge_threshold 自己设置或者创建表或者索引的时候设置) 会合并
+
+主键设计原则：
+1. 降低主键长度
+2. 顺序插入
+3. 不要使用 数据本身的unique id 来当主键 
+4. 避免对主键的修改
+
+#### order by优化
+1. using filesort 不是通过索引直接返回排序
+2. using index 效率高，不需要额外排序
+show variable like 'sort_buffer_size'
+
+#### group by 优化
+
+#### limit 优化
+大数据情况下，limit耗时太长
+覆盖索引，加子查询
+
+#### count 优化
+myisam 将表的长度存在了磁盘上
+innodb 没有存，只是一个一个的计数
+
+自己维护一个计数器
+
+count的几种方式
+cout(\*) 不取值，直接累加，做了优化 ,count(主键),count(字段),count(1) 
+
+#### update 语句的注意事项
+避免行锁上升为表锁 更新一定要加索引
+
+## 视图，存储过程，触发器，存储函数 存储对象
+
+1. 视图   
+		 虚拟存在的的表，基表。view。视图中的数据是动态生成的。保存的是sql的逻辑，不保存数据  
+
+--创建视图  
+create [or replace] view 视图名称[(列名列表)] AS select语句 [with[cascaded|local] check option]  
+
+查询视图  
+show create view 视图名称  
+select * from 视图名称....;  
+
+修改视图  
+create [or replace] view  视图名称[(列名列表)] As select语句 ...
+alter view 视图名称 as select 。。。  
+
+drop view [if exists] 视图名称,  
+
+视图检查选项 local cascaded  
+通过检查选项来检查视图中的每一行。mysql允许基于一个视图创建另一个视图。  
+cascade（默认值）会检查所有依赖，local  
+
+##### 视图的更新
+1. 视图中的行与表中的行具有一对一的关系  
+聚合函数或者窗口函数sum,min,max(),count  
+distinct,group by,having,union或者union all
+  
+##### 视图的作用
+1. 操作简单，将复杂的查询条件打包。
+2. 安全： 数据库可以授权，但是表中字段没法授权，所以可以通过视图实现。
+
+##### 存储过程
+ 多条sql语句的集合。  
+ 简化应用开发人员的工作  
+ 特点: 封装，复用，可以接受参数，也可以返回数据，可以减少网络交互，提升效率  
+
+ 基本语法： 
+ 		create procedure 名称([参数列表，输入返回])
+ 		begin
+ 			sql语句
+ 		end
+
+ 		调用
+ 		call 名称（参数）
+
+ 		查看
+ 		Select * from information_schema.routines where routine_schema='xxx'
+ 		show create procedure 存储过程的名称
+
+ 		删除
+ 		drop procedure 名称
+
+
+ 		命令行中遇到分号就结束了，所以需要用delimiter 来指定语句结束符号
+ 		delimiter $$
+
+
+
+存储过程的语法结构  
+
+###### 变量： 系统，用户自定义，局部
+
+系统变量：  mysql服务器提供，不许哟啊用户定义，全局global，会话变量session   
+
+查看系统变量：  
+show [session|global] variables;  
+show [session|global] variables like '...';  
+select @@[session|global] 系统变量名;  
+
+设置系统变量  
+set [session|global] 变量名 =   
+set @@变量名=  
+
+系统重启会重置  
+如果想要永久修改，需要修改配置文件  
+
+用户自定义变量：  
+不需要提前声明  用@就好（@@是系统）session作用域  没有赋值的变量获得就是null  
+set @var_name = expr,  
+set @var_name := expr,  
+select @var_name:= expr;  
+select 字段名 into @varname from 表名 从表中查数据赋值给变量  
+
+使用  
+select @varname  
+
+局部变量  
+declare声明，可作为存储过程内的局部变量或者输入参数   begin end 块之内  
+declare 变量名，变量类型 [default...];  
+
+set/select 赋值  
+
+###### if条件判断
+if condition1 then
+elseif condition2 then
+else
+end if;
+
+存储过程的参数：  
+in  输入参数 默认  
+out  输出参数  
+inout  即可作为输出也可作为输入  
+
+create procedure 名字([in/out/inout 参数名 参数类型])  
+begin  
+  
+end;  
+
+###### case
+
+
+case (case_value)
+		when when_value1 then statement_list1  
+		...  
+		....  
+		else   
+ens case;  
+
+
+###### 循环控制
+while 条件 do  
+  
+end while；  
+
+
+repeat 当满足条件退出循环  
+repeat  
+	sql  
+ 	until  
+end repeat  
+
+loop: leave/iterate
+
+游标： 用来存储查询结果集的数据类型，在存储过程和函数中可以使用游标对结果集进行循环处理。  
+open / fetch / close  
+delclare 名字 cursor for sql语句
+open 名字  
+fetch 游标名称 into 变量[,变量...];  
+close  名字   
+
+游标变量应该在最后声明  
+
+条件处理程序 handler   
+declare handler_action handler for condition_value[,condition_value]... statement;  
+handler_action:  
+		continue;  
+		exit;  
+
+condition_value:  
+	sqlstate sqlstate_value  状态码 如 0200  
+	sqlwarning 所有01 开头的sqlstate 的简写  
+	not found : 所有02 开头的sqlstate的简写  
+	sqlexception： 所有没有被sqlwarning，notfound捕获的sqlstate的简写  
+
+
+存储函数： 有返回值的存储过程，参数只能是in类型 具体语法如下：  
+create function 名字（参数列表）  
+returns type [characteristic 特性值，deterministic/no sql/ reads sql data]  
+begin
+	sql
+	return ...;
+end;
 
 
