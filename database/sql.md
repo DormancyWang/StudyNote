@@ -33,7 +33,9 @@
 1. SQL(Structured Query Language)，标准 SQL 由 ANSI 标准委员会管理，从而称为 ANSI SQL。各个 DBMS 都有自己的实现，如 PL/SQL、Transact-SQL 等。
 
 2. 数据库创建与使用:
-```CREATE DATABASE test;
+
+```
+CREATE DATABASE test;
 USE test;
 ```
 
@@ -794,30 +796,243 @@ loop: leave/iterate
 open / fetch / close  
 delclare 名字 cursor for sql语句
 open 名字  
-fetch 游标名称 into 变量[,变量...];  
+fetch 游标名称 into 变量\[,变量...\];  
 close  名字   
 
 游标变量应该在最后声明  
 
 条件处理程序 handler   
+```
 declare handler_action handler for condition_value[,condition_value]... statement;  
 handler_action:  
 		continue;  
 		exit;  
+```
 
+```
 condition_value:  
 	sqlstate sqlstate_value  状态码 如 0200  
 	sqlwarning 所有01 开头的sqlstate 的简写  
 	not found : 所有02 开头的sqlstate的简写  
 	sqlexception： 所有没有被sqlwarning，notfound捕获的sqlstate的简写  
+```
 
+存储函数： 有返回值的存储过程，参数只能是in类型 具体语法如下:  
 
-存储函数： 有返回值的存储过程，参数只能是in类型 具体语法如下：  
-create function 名字（参数列表）  
-returns type [characteristic 特性值，deterministic/no sql/ reads sql data]  
+```create function 名字（参数列表）  
+returns type \[characteristic 特性值，deterministic/no sql/ reads sql data\]  
 begin
 	sql
 	return ...;
 end;
+```
+
+二级日志开启就必须要加如特性字段    
+
+触发器  
+与表有关，在insert/update/delete之前或者之后，触发并执行触发器中定义的sql语句的集合。可以帮助保证数据的完整性，日志记录，数据校验等操作。  
+old，new 引用了原来的记录内容和新的记录内容，与其他数据库类似。只支持行级触发，不支持语句触发。  
+
+1. 创建  
+create trigger trigger_name  
+before/after insert/update/delete  
+on tbl_name for each row  行触发器  
+begin  
+	trigger_stmt;  
+end;  
+
+2. 查看
+show triggers;
+
+drop trigger [schema_name.]trigger_name;
+now()函数
+
+### 锁
+1. 概述  
+一种机制  
+2. 分类   
+全局锁  锁住所有表  
+表级锁  每次操作锁住整张表  
+行级锁  每次操作锁住处理的行数据  
+
+全局锁：对整个数据库实例加锁，加锁后整个实例出于只读状态，后续的dml和ddl语句  
+应用场景：左全库的逻辑备份，对所有的表进行锁定，从而保证一致性的视图保证数据的完整性  
+flush tables with read lock  
+unlock tables;
+会导致主从延迟  
+--single-transaction 不加锁的备份，底层通过快照实现  
+
+2. 表级锁
+锁表，锁定粒度大，冲突高，并发低 myisam,innodb,dbd  
+表锁/ 元数据锁 / 意向锁
+
+表锁， 读，写  
+lock tables 表名 read/write  
+unlock tables  或者断开链接   
+
+元数据锁，不允许更改表结构，自动加上
+
+意向锁
+select ... lock in share mode
+共享锁 与 表锁共享锁read兼容，与表锁排他锁互斥
+
+insert,update,delete,select ... for update
+意向排他锁ix 与表锁共享锁及排他锁都互斥，意向锁之间不会互斥
+
+select * from performance_schema.data_locks;
 
 
+#### 行级锁
+主要用在innodb存储引擎中。myisam和innodb区别，事务，外键，行级锁  
+innodb 数据基于索引组织，航所通过对索引上的索引项加锁实现的，而不是对记录加锁。  
+1. 行锁（record lock） 锁定单行记录，防止事务进行update和delete，rc rr隔离级别支持  
+2. 间隙锁（gap lock）：防止其他事务对间隙进行insert，产生幻读现象，rr级别下支持
+3. 临键锁： （next-key lock） 行锁和间隙锁的组合，同时锁住数据，并锁住数据前面的间隙gap 在rr级别下支持  
+
+1. S 共享锁： 允许读，阻止其他事务获得相同数据集的排他锁
+2. X 排他锁： 允许获取排他锁的事务更新数据，阻止其他事务获得排他锁和共享锁  
+
+https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html  
+
+
+#### 一些机制
+
+
+对唯一索引进行检索时，对   已存在的记录  进行等值匹配时，会优化为行锁  
+不通过 索引条件 检索数据，innodb会对所有记录加锁，此时就会升级为表锁  
+
+
+默认情况下，innodb在RR 事务隔离级别运行，使用next-key 锁进行搜索和扫描，防止幻读  
+1. 索引上的等值查询（唯一索引），给不存在的记录加锁的时候，优化为间隙索引  
+2. 索引上的等值查询（普通索引）， 向右遍历时最后一个值不满足查询需求时，next-key lock退化为间隙锁  
+3. 索引上的范围查询（唯一索引） -- 会访问到不满足条件的第一个值为止  
+
+目的是防止其他事务插入间隙，间隙锁可以共存，一个事务采用的间隙锁，不会阻止另一个事务在同一间隙上采用间隙锁
+
+
+
+### innodb 引擎
+
+#### 逻辑结构
+
+表空间TableSpace->段Segment->区Extent->页Page->行Row
+
+TableSpace :  .ibd file.
+Segement : leaf node Segment 数据段，non-leaf node segment 索引段，rollback segment 回滚段  
+区 ：　表空间的单元结构，１M 大小，页大小16k 所以有64页  
+页 ： 磁盘管理的最小单元，每页16k，为了保证页的连续性 每次申请4-5 个区  
+行 ： 按行进行存放  
+
+#### 架构
+innodb 擅长事务处理，具有崩溃回复的特性  
+
+
+##### 内存结构
+1. 缓冲池 buffer pool  
+页为单位，链表数据结构管理，页类型 free / clean / dirty  
+
+
+
+2. change buffer 更改缓冲区   针对于非唯一二级索引来说的  
+执行dml的时候，如果数据没有在buffer pool 内时，不会操作磁盘，而是会存在change buffer中，在未来数据被读取的时候，合并到buffer pool 中，再刷新到磁盘上  
+二级索引非唯一  插入的位置也比较随机，有了更改缓冲区可以减少磁盘io  
+
+3. adaptive Hash index ----> buffer pool 自适应的hash索引  
+参数 adaptive_hash_index  
+
+4. log buffer(redo log,undo log) 16mb 如果需哟啊更新和删除多行数据，增加日志缓冲区的大小可以节省磁盘io  
+innodb_log_buffer_size;  
+innodb_flush_log_at_trx_commit 日志刷新到磁盘的时机   
+1：日志在每次事务提交的时候刷新到磁盘当中  
+0：每秒刷新一次  
+2： 事务提交+每秒  
+
+
+##### 磁盘结构
+1. System Tablespace 系统表空间： 存放change buffer 的区域 innodb_file_pre_table 打开，就不存表文件，如果关闭了就也会存储表文件  
+参数 innodb_data_file_path
+
+
+2. File_per_table tablespace 每个表的独立表空间  
+参数innodb_file_per_talbe (default on)  
+
+3. General Tablespace：通用表空间  create tablespace 语法创建，在创建表的时候可以指定该表空间  
+create tablespace xxx add detafile 'file_name' engine = engine_name  
+
+4. Undo Tablesapce：撤销表空间。初始化会创建两个Undo表空间默认16m 存储undo日志  
+
+5. Temporary Talbesapce临时表空间：临时回话，全局。存储用户创建的临时表等数据  
+6. doublewrite Buffer files 双写缓冲区： innodb将数据页从buffer pool刷新到磁盘前，会放在这里  便于系统异常的时候恢复数据  
+
+7. redo log重做日志：  事务的持久性。redo log buffer，redo log 内存，磁盘  
+用于将脏页刷新到磁盘中 发生错误时，进行数据恢复  
+以循环方式写入 ib_logfile0,1
+
+##### 后台线程
+1. Master Thread
+核心后台线程，调度其他线程，将缓冲池中的数据   异步刷新到磁盘当中。脏页的刷新， 合并插入缓存，undo页的回收  
+
+2. IO Thread： 使用AIO来处理 异步非堵塞 的io，可以极大提高数据库的性能。
+线程： 
+Read thread 4个
+Write thread 4个
+Log thread 1
+Insert buffer thread 1
+
+3. Purge Thread : 回收事务已经提交了的undo log
+4. Page Cleaner Thread : 协助master Thread 刷新脏页到磁盘的线程，减轻Master Thread 的压力，减少阻塞  
+
+
+
+#### 事务原理
+acid
+原子性
+一致性
+隔离性
+持久性
+acd： redo log，undo log
+i： 锁，mvcc
+
+1. redo log :　记录事务提交时数据页的修改，用来实现事务的持久性。
+redo log buffer，redo log file
+WAL write-ahead-log
+
+2. undo log : 回滚日志，用于记录数据被修改之前的信息。作用： 提供回滚，mvcc（多版本并发控制）
+undo log 逻辑日志，记录反向的操作 例如：delete->insert 
+undo log 的销毁，一般事务提交就销毁了，但有例外，还在被mvcc用
+undo log 的存储，段，存放在rollback segment中，内部包含1024个unod log segment
+
+##### mvcc 多版本并发控制
+1.  当前读  
+读取的记录是最新的，并且要保证其他的并发事务 不能修改当前记录。会加锁  
+比如 select ... lock in share mode;
+
+2. 快照读
+读取的是记录数据的可见版本，普通的select 就是快照读，不加锁，是非阻塞读  
+Read Committed：每次select 都会生成一个快照读
+Repeatable Read: 开启事务后的第一个select 语句才是快照读
+serializable： 快照读会退化为当前读
+
+3. mvcc
+Multi-Version Concurrency Control,维护一个数据的多个版本，使读写操作没有冲突 ，快照读为mysql实现mvcc提供了一个非阻塞读的功能  
+
+实现依赖，数据库记录中的三个隐式字段，undo log,readView。
+DB_TRX_ID / DB_ROLL_PTR /DB_ROW_ID
+最近修改事务的id
+回滚指针，指向记录的上一个版本，配合undo log使用  
+隐式主键，没有主键的时候才有。  
+
+undo log补充：insert的时候，产生的只在回滚的时候需要，在事务提交以后可以被立即删除  
+update和delete的时候产生的undo log在读快照的时候也需要。不会立即删除。
+undo log 版本链   
+
+readview ： mvcc提取数据的依据，
+m_ids：当前活跃的事务id集合
+min_trx_id：最小活跃事务id
+max_trx_id：预分配事务id，当前事务id+1
+creator_trx_id:readview创建者的事务id  
+版本链的访问规则  
+
+生成时机：  
+rc：事务每执行一次快照读时生成readView  
+rr： 仅在事务第一次执行快照读的时候生成readView 后续复用该ReadView  
