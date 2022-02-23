@@ -1,3 +1,24 @@
+## mysql实用
+1. 相关配置文件
+```
+/etc/my.inf
+/var/lib/mysql/auto.cnf
+
+/log/mysql.log
+```
+2. 相关命令
+```
+firewall --zone=public --port=3306/tcp --permanent
+firewall --reload
+```
+3. 加密验证算法和ssl
+mysql-native....
+
+
+
+
+
+
 # 关系数据库设计理论
 ## 重要术语
 属性（attribute）：列的名字，上图有学号、姓名、班级、兴趣爱好、班主任、课程、授课主任、分数。 依赖（relation）：列属性间存在的某种联系。 元组（tuple）：每一个行，如第二行 （1301，小明，13班，篮球，王老师，英语，赵英，70） 就是一个元组 
@@ -1033,6 +1054,129 @@ max_trx_id：预分配事务id，当前事务id+1
 creator_trx_id:readview创建者的事务id  
 版本链的访问规则  
 
-生成时机：  
-rc：事务每执行一次快照读时生成readView  
-rr： 仅在事务第一次执行快照读的时候生成readView 后续复用该ReadView  
+生成时机：    
+rc：事务每执行一次快照读时生成readView    
+rr： 仅在事务第一次执行快照读的时候生成readView 后续复用该ReadView   
+
+#### mysql管理
+1. 系统数据库
+information_schema ：　提供访问数据库元数据的各种表视图，包含数据库，表，字段类型及访问权限等
+mysql ： 存储mysql服务器正常运行所需要的各种信息（时区，主从，用户，权限）
+performance_schema：为ｍｙｓｑｌ服务器运行是状态提供了一个底层监控的功能，主要用于手机数据库服务器性能参数　　
+sys：
+
+##### 常用工具
+mysql -e 
+mysqladmin 
+mysqlbinlog 二进制日志管理
+mysqlshow --count -i  
+mysqldump  
+数据导入  
+mysqlimport  
+source  
+
+
+### 运维篇
+日志/主从复制/分库分表/读写分离
+
+#### 日志
+
+1. 错误日志：
+/var/log     show varialbes like '%log_error%'
+
+2.  二进制日志
+binlog 记录了所有ddl 和dml语句 不包括select 和show
+灾难时的数据恢复；mysql的主从复制；
+show variables like '%log_bin%'
+statement/row/mixed 基于sql，基于行，混合
+reset master/purge master logs to 'binlog.xxxx'
+purge master logs before 
+show varibles like '%binlog_expire_logs_seconds%'
+
+3. 查询日志
+所有的增删改查都会被记录
+默认关闭
+general_log
+general_log_file 
+
+4. 慢查询日志
+语句效率低的语句  
+log_qurey_time<  < min_exmained_row_limit
+
+#### 主从复制
+1. 可以预防意外
+2. 降低主库访问压力，读写分离
+3. 可以在从库备份，以免影响主库
+relay log
+三部  
+
+主库配置 my.cnf
+server-id = 1
+read-only = 0
+binlog-ignore-db = mysql
+binlog-do-db = db01
+创建用户，赋予权限
+show master status
+
+从库配置 /etc/my.cnf
+server-id = 2
+read-only = 1
+
+https://dev.mysql.com/doc/refman/8.0/en/replication.html
+
+
+
+#### 分库分表
+将数据分散存储，是的单一数据库表的数据量变小，解决性能问题
+单数据库存储会有两个问题
+io瓶颈：大量磁盘io 网络io瓶颈
+cpu瓶颈：排序分组，聚合统计，cpu会出现瓶颈
+
+拆分策略：
+垂直 分库，分表
+水平 分库，分表
+
+实现
+1. shardingjdbc 基于aop原理，在应用程序中对本地执行的sql进行、拦截、解析、改写 路由处理。需哟啊自行编码配置实现，只支持java语言，性能比较高
+2. mycat：数据库分库分表的中间件，支持多种语言，性能不如sharding jdbc
+
+mycat 数据库中间件  
+schema.xml 以及相关配置  
+server.xml 配置用户信息
+mycat配置文件详解：
+schema.xml
+逻辑库和表  
+1. schema标签  
+2. table标签  <table name='TB ORDER' dataNode='' rule='' primaryKey  type/>
+3. <dataNode>
+4. <dataHost>
+
+rule.mxl
+
+
+server.xml 
+
+Mycat 分片
+垂直拆分
+                
+水平分片的规则：
+范围分片
+取模分片
+一致性hash
+枚举分片
+substring
+固定分片hash算法
+字符串hash解析
+
+mycat的管理与监控
+底层运行原理： 
+解析sql->分片->路由->读写分离  
+分页<-排序<-聚合<-结果合并  
+
+
+监控平台
+Zookeeper配置中心
+MyCat-Web
+server.xml 里 定义了 8066,9066端口
+
+ 
