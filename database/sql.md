@@ -5,6 +5,8 @@
 /var/lib/mysql/auto.cnf
 
 /log/mysql.log
+
+/etc/resolv.conf
 ```
 2. 相关命令
 ```
@@ -1152,7 +1154,7 @@ schema.xml
 4. <dataHost>
 
 rule.mxl
-
+ 
 
 server.xml 
 
@@ -1179,4 +1181,8 @@ Zookeeper配置中心
 MyCat-Web
 server.xml 里 定义了 8066,9066端口
 
- 
+#### mycat主从复制
+也就是用的mycat的路由 寻路实现的  
+1. <dataHost> 内的balance属性 0：不开启读写分离，所有操作发送到writehost上。1. 全部的readhost和备用的writehost都参与select 语句的负载均衡（双主双从） 2.所有的读写随机分发 3.所有的读请求随机分发到writehost对应的readhost ， writehost不负担读压力  
+
+
