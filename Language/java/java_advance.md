@@ -248,6 +248,117 @@ TreeSet：使用红黑树存储，可排序的。
 用Set 来过滤重复的数据  
 
 4. Map接口 
+Map->HashMap,LinkedHashMap
+	->TreeMap,
+	->HashTable,Properties
+
+1. HashMap 主要实现类，线程不安全，效率高，可存储null的key和value
+2. LinkedHashMap： 添加了前后指针，可以按插入顺序遍历，对于频繁的遍历操作，效率比HashMap高
+3. TreeMap ： 底层红黑树，可以排序
+4. Hashtable： 老旧实现类，线程安全，基本不用
+5. Properties： key 和 value都是String，处理配置文件的类  
+
+比较顺序 第一 取hash加映射算法，第二取hash比较，第三用equals
+
+HashMap.Entry/Node 看源码就好  
+
+5. Properties
+是Hashtable 的子类   
+Key和Value都是字符串类型  
+
+
+6. Collections工具类  
+一个操作Set，List，Map的工具类。都是静态方法  
+排序操作：（均为static方法）  
+reverse(List)：反转List 中元素的顺序  
+shuffle(List)：对List集合元素进行随机排序  
+sort(List)：根据元素的自然顺序对指定List 集合元素按升序排序  
+sort(List，Comparator)：根据指定的Comparator 产生的顺序对List 集合元素进行排序  
+swap(List，int，int)：将指定list 集合中的i 处元素和j 处元素进行交换查找、替换  
+Object max(Collection)：根据元素的自然顺序，返回给定集合中的最大元素  
+Object max(Collection，Comparator)：根据Comparator 指定的顺序，返回给定集合中的最大元素  
+Object min(Collection)  
+Object min(Collection，Comparator)  
+int frequency(Collection，Object)：返回指定集合中指定元素的出现次数  
+void copy(List dest,Listsrc)：将src中的内容复制到dest中  
+booleanreplaceAll(List list，Object oldVal，Object newVal)：使用新值替换List 对象的所有旧值  
+
+#### 泛型
+1. 为什么有泛型
+jdk1.5之前是设计为object的，之后使用泛型来解决  
+	1. 解决元素存储的安全性问题   
+	
+	2. 解决需要强制转换的问题  
+	
+	3. Java泛型可以保证如果程序在编译时没有发出警告，运行时就不会产生ClassCastException异常。同时，代码更加简洁、健壮。  
+
+2. 在集合中的泛型使用
+
+3. 自定义的泛型结构
+
+	自定义泛型类: class GenTest<K,V> interface List<T>    
+
+	使用泛型的主要优点是能够在编译时而不是在运行时检测错误  
+	
+	泛型不同的引用不能相互赋值。尽管在编译时ArrayList<String>和ArrayList<Integer>是两种类型，但是，在运行时只有一个ArrayList被加载到JVM中。  
+	
+	泛型如果不指定，将被擦除，泛型对应的类型均按照Object处理，但不等价于Object。经验：泛型要使用一路都用。要不用，一路都不要用  
+	class Son1 extends Father {// 等价于class Son extends Father<Object,Object>{}
+
+	不能使用new E[]。但是可以：E[] elements = (E[])new Object[capacity];参考：ArrayList源码中声明：Object[] elementData，而非泛型参数类型数组
+
+	在类/接口上声明的泛型，在本类或本接口中即代表某种类型，可以作为非静态属性的类型、非静态方法的参数类型、非静态方法的返回值类型。但在静态方法中不能使用类的泛型。
+
+4. 泛型在继承上的实现
+5. 通配符的使用
+
+	<?>
+允许所有泛型的引用调用
+通配符指定上限
+上限extends：使用时指定的类型必须是继承某个类，或者实现某个接口，即<= 
+通配符指定下限
+下限super：使用时指定的类型不能小于操作的类，即>=
+举例：
+<?extends Number>     (无穷小, Number]
+只允许泛型为Number及Number子类的引用调用
+<? super Number>      [Number , 无穷大)
+只允许泛型为Number及Number父类的引用调用
+<? extends Comparable>
+只允许泛型为实现Comparable接口的实现类的引用调用
+
+6. 泛型应用的举例
+
+
+
+#### IO 流
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #### jvm
