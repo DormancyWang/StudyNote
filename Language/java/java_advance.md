@@ -196,7 +196,6 @@ java.time包通过值类型Instant提供机器视图，不提供处理人类意�
 一些基本的参数信息  
 一些基本的方法  
 
-
 #### BigInteger和BigDecimal
 
 #### 枚举类
@@ -331,32 +330,158 @@ jdk1.5之前是设计为object的，之后使用泛型来解决
 
 
 #### IO 流
+##### File类
+
+final static String seperator 通用分隔符  
+
+
+三种构造器
+public File(String pathname)  
+
+public File(String parent,String child)  
+
+public File(File parent,String child)  
+
+
+File类的获取功能
+public String getAbsolutePath()：获取绝对路径
+public String getPath()：获取路径
+public String getName()：获取名称
+public String getParent()：获取上层文件目录路径。若无，返回null
+public long length() ：获取文件长度（即：字节数）。不能获取目录的长度。
+public long lastModified() ：获取最后一次的修改时间，毫秒值
+public String[] list()：获取指定目录下的所有文件或者文件目录的名称数组
+public File[] listFiles()：获取指定目录下的所有文件或者文件目录的File数组  
+
+File类的重命名功能  
+publicbooleanrenameTo(Filedest):把文件重命名为指定的文件路径  
+
+
+File类的判断功能
+public boolean isDirectory()：判断是否是文件目录
+public boolean isFile()：判断是否是文件
+public boolean exists()：判断是否存在
+public boolean canRead()：判断是否可读
+public boolean canWrite()：判断是否可写
+public boolean isHidden() ：判断是否隐藏
+
+File类的创建功能
+public boolean createNewFile()：创建文件。若文件存在，则不创建，返回false  
+public boolean mkdir() ：创建文件目录。如果此文件目录存在，就不创建了。如果此文件目录的上层目录不存在，也不创建。  
+public boolean mkdirs()：创建文件目录。如果上层文件目录不存在，一并创建注意事项：如果你创建文件或者文件目录没有写盘符路径，那么，默认在项目路径下。  
+
+##### IO流
+
+按操作数据单位不同分为：字节流(8 bit)，字符流(16 bit)  
+按数据流的流向不同分为：输入流，输出流  
+按流的角色的不同分为：节点流，处理流  
+
+
+(抽象基类) 字节流 字符流
+输入流 InputStream Reader
+输出流 OutputStream Writer
+
+![IO 流体系](image/IOStream.png)
+
+不要用throws 因为不能关闭  
+
+
+缓冲流
+
+外层关闭的时候，自动关闭了内层流  
+
+
+转换流提供了在字节流和字符流之间的转换
+Java API提供了两个转换流：
+InputStreamReader：将InputStream转换为Reader
+OutputStreamWriter：将Writer转换为OutputStream
+字节流中的数据都是字符时，转成字符流操作更高效。
+很多时候我们使用转换流来处理文件乱码问题。实现编码和
+解码的功能
+
+
+#### 网络编程
+
+
+
+### Java 反射机制
+api：  
+```java
+java.lang.Class
+java.lang.reflect.Method
+java.lang.reflect.Field
+java.lang.reflect.Constructor
+```
+Reflection（反射）是被视为动态语言的关键，反射机制允许程序在执行期借助于Reflection API取得任何类的内部信息，并能直接**操作**任意对象的内部属性及方法。  
+
+
+1、动态语言
+是一类在运行时可以改变其结构的语言：例如新的函数、对象、甚至代码可以被引进，已有的函数可以被删除或是其他结构上的变化。通俗点说就是在运行时代码可以根据某些条件改变自身结构。主要动态语言：Object-C、C#、JavaScript、PHP、Python、Erlang。
+
+2、静态语言
+与动态语言相对应的，运行时结构不可变的语言就是静态语言。如Java、C、C++。
+
+补充：动态语言vs 静态语言
+Java不是动态语言，但Java可以称之为“准动态语言”。即Java有一定的动态性，我们可以利用反射机制、字节码操作获得类似动态语言的特性。Java的动态性让编程的时候更加灵活！
+
+
+可以用反射做什么？  
+在运行时判断任意一个对象所属的类
+在运行时构造任意一个类的对象
+在运行时判断任意一个类所具有的成员变量和方法
+在运行时获取泛型信息
+在运行时调用任意一个对象的成员变量和方法
+在运行时处理注解
+生成动态代理
+
+1. 理解Class类并获取Class实例
+
+Object类中定义了getClass()方法，返回Class类  这就是反射的源头  
+
+Class本身也是一个类
+Class 对象只能由系统建立对象
+一个加载的类在JVM 中只会有一个Class实例
+一个Class对象对应的是一个加载到JVM中的一个.class文件
+每个类的实例都会记得自己是由哪个Class 实例所生成
+通过Class可以完整地得到一个类中的所有被加载的结构
+Class类是Reflection的根源，针对任何你想动态加载、运行的类，唯有先获得相应的
+Class对象
+
+1）前提：若已知具体的类，通过类的class属性获取，该方法最为安全可靠，程序性能最高  
+实例：Class clazz= String.class;  
+2）前提：已知某个类的实例，调用该实例的getClass()方法获取Class对象  
+实例：Class clazz= “www.atguigu.com”.getClass();  
+3）前提：已知一个类的全类名，且该类在类路径下，可通过Class类的静态方法forName()获取，可能抛出ClassNotFoundException  
+实例：Class clazz= Class.forName(“java.lang.String”);  
+4）其他方式(不做要求)  
+ClassLoadercl = this.getClass().getClassLoader();  
+Class clazz4 = cl.loadClass(“类的全类名”);  
+获取Class类的实例(四种方法)  
+
+可以有class对象的类型 class，interface,[],enumtation,primitive type,  void  
 
 
 
 
+通过反射可以调用类的私有结构
 
 
 
 
+2. 类的加载与ClassLoader的理解
+3. 创建运行时类的对象
+4. Java反射机制概述
+5. 获取运行时类的完整结构
+6. 调用运行时类的指定结构
+7. 反射的应用：动态代理 7
+
+##### 动态代理
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+##### java8的新特性
+1. Lambda表达式
+函数式接口： 接口里面只有一个抽象方法   @FunctionalInterface()  
+2. 方法引用  
 
 
 
