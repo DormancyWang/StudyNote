@@ -90,4 +90,46 @@ LIMIT(begin,length)
 	![多行比较操作符](image/inner_select2.jpg)
 
 
-5.
+5. 相关子查询
+![相关子查询](image/inner_select3.jpg)	
+	1. exists 和 not exists
+	2. 子查询的位置非常灵活
+	3. 相关更新和相关删除
+	
+6. 子查询和内连接的效率对比 
+![效率对比](image/who_is_better.jpg)
+```sql
+#子查询技巧总结
+-- 1. 使用limit 来获取最大最小值 ，嵌套聚合函数的功能
+select d.*
+from departments d,
+     (select department_id, avg(salary) avg_sal
+      from employees
+      group by department_id
+      order by avg_sal
+      limit 0,1) t_dept_avg_sal
+where d.department_id = t_dept_avg_sal.department_id;
+-- 2. 使用关联子查询
+-- 3. 使用自连接，表链接来优化查询速度
+```
+
+#### 创建管理表
+1. 数据类型
+![数据类型](image/data_type.jpg)
+2. 创建管理数据库
+	1. 创建数据库
+	2. 使用数据库
+	3. 更改数据库
+	![更改数据库](image/alterdb.jpg)
+	4. 删除数据库
+3. 创建表
+	1. int后面加数字， 数据的显示宽度
+	2. as subquery
+4. 修改表
+	1. 追加一个列
+	2. 修改一个列
+	3. 重命名一个列
+	4. 删除一个列
+5. 重命名表
+6. 删除表
+7. 清空表
