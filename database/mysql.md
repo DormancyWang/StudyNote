@@ -214,3 +214,26 @@ where d.department_id = t_dept_avg_sal.department_id;
 #### 存储过程和函数
 
 #### 变量，存储过程和游标
+1. 系统变量
+	1. 全局系统变量 @@global
+	2. 会话变量 @@session
+	3. 查看系统变量 
+2. 用户变量
+	1. 回话用户变量
+	2. 局部变量 declare
+3. 定义条件和处理程序
+4. 流程控制
+	1. if
+	2. case
+	3. loop
+	4. while
+	5. repeat
+	6. leave
+	7. iterate
+5. 游标 cursor
+6. set persist
+
+#### 触发器
+1. 触发器的创建
+![](image/triger.jpg)
+2. 
