@@ -133,3 +133,84 @@ where d.department_id = t_dept_avg_sal.department_id;
 5. 重命名表
 6. 删除表
 7. 清空表
+8. commit 和 rollback
+9. truncate 不支持事务，不可以回滚 和 delete from 可以回滚
+10.  DDL 一旦执行不可以回滚 和 DML 默认情况下不可以回滚 set autocommit = false  
+![delete和truncate的区别](image/del_trun.jpg)
+
+#### 数据处理之增删改查
+1. 插入数据
+	1. values方式
+	2. 将查询结果插入到表中
+	![将查询结果插入到表中](image/insert_select.jpg)
+2. 更新数据
+	1. 更新时的数据完整性问题
+	![更新时的数据完整性问题](image/update_wrong.jpg)
+3. 删除数据
+	1. 删除数据时的数据完整性问题
+	![删除数据时的数据完整性问题](image/delete_wrong.jpg)
+4. 计算列mysql8 新特性
+
+#### MySql 数据类型
+1. 整数类型
+	1. 可选属性
+		1. M
+		2. UNSIGNED
+		3. ZEROFILL
+		！[](image/xuanze.jpg)
+2. 浮点数类型
+	1. float，double(M,D) 标度，精度
+3. 定点数类型
+	1. Decimal(M,D)
+4. 位类型
+	1. BIT  函数BIT(), HEX()
+5. 日期和时间类型
+	1. YEAR/TIME/DATE/DATETIME/TIMESTAMP
+6. 文本字符串类型
+	1. CHAR,VARCHAR,TEXT
+7. enum类型
+8. set类型
+9. 二进制字符串类型
+10. json类型
+	![json](image/json.jpg)
+11. 空间类型
+
+#### 约束
+1. 约束
+	1. 数据完整性(Data Integrity) accuracy,reliability
+	![](image/constrain.jpg)
+	2. 约束的分类
+	![约束的分类](image/constrain_type.jpg)
+	![约束的具体](image/constrains.jpg)   
+	3. 查看表约束
+	inforschema.TABLE_CONSTRAIN (view)
+2. 非空约束 not null
+3. 唯一性约束 unique
+	1. 特点
+	![unique](image/unique.jpg)
+4. 主键约束 PRIMARY KEY
+	1. 不要修改主键值，破坏数据的完整性
+	2. 说明：删除主键约束，不需要指定主键名，因为一个表只有一个主键，删除主键约束后，非空还存在。
+5. 自增列：auto_increment
+	1. 特殊点
+	![](image/auto_increase.jpg)
+	2. mysql 8 的新特性，自增变量的持久化
+6. 外键 foreign key
+	1. 约束等级
+	![](image/forien.jpg)
+	![](image/foriengkey.jpg)
+7. check约束，5.7里面有，但是没用
+8. default 约束
+
+#### 视图
+1. 数据库常见对象
+![image/mysql_object.jpg](image/mysql_object.jpg)
+2. 视图的定义，一种虚拟表，本身不存储数据。  
+3. 视图的创建
+	1. 基于单表
+	2. 基于多表联合
+	3. 基于视图创建视图
+
+#### 存储过程和函数
+
+#### 变量，存储过程和游标
