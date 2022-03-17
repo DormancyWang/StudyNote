@@ -1,0 +1,1 @@
+XHTML 是以 XML 格式编写的 HTML。
