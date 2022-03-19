@@ -1,0 +1,169 @@
+### servlet 用来处理访问请求的接口
+1. servlet api 是由tomcat来实现的扩展类 需要找apache的文档查看 
+
+2. xml配置 url和类名映射
+	1. servlet 标签
+	2. servlet Mapping 标签
+	
+3. servlet 的生命周期
+	1. 构造器
+	2. init
+	//程序加载的时候调用
+	3. service
+	//所有后来的访问，都是调用这个方法
+	4. destroy
+	//最后服务器销毁所调用的方法
+
+4. serverlet是最基本的类，一般不实现 而是用HttpServlet类来实现
+
+5. servlet类的继承体系
+	|servlet   | GenericServlet   |    HttpServlet|
+	|----------|------------------|---------------|
+	只是定义了servlet规范
+		
+	实现了servlet接口，做了很多空实现。持有一个servletconfig的类的引用，
+	并对servletconfig做了一些方法
+	重写了service方法，调用了dopost 和doget方法 跑出错误
+	实现了请求的分发处理
+	
+6. ServletConfig类
+	
+	1. 配置信息类
+	
+	2. 可以获取Servlet程序的别名
+	
+	3. 获取初始化参数init-param
+	
+	4. 获取ServletContext对象
+
+
+7. 重写了init方法需要调用父类的init方法 ，给类中hold的conifg对象赋值
+
+8. ServletContext
+	
+	1. ServletContext是一个接口，它表示一个Servlet上下文对象
+	
+	2. 一个web工程只有一个ServletContext对象实例
+
+	3.  ServletContext对象是一个域对象
+		域对象是可以向map一样存取数据的对象
+		域值得是可以存储数据的操作范围
+	
+	4. 一些方法
+		setAttribute(),getAttribute(),removeAttribute;
+		
+	5. 作用
+		
+		1. 获取web.xml中配置的上下文参数context-param
+		
+		2. 获取当前的工程路径，格式 :/工程路径
+		
+		3. 获取工程部署后在服务器硬盘上的绝对路径
+		
+		4. 存储环境变量的参数
+	
+	6. ServletContext 里的参数和 initparam 完全不一样,没有交叉
+	
+
+
+
+### HTTP 协议
+1. GET请求头
+	请求行，请求头
+	重要报文字段
+	1. Connection:  告诉服务器请求应该如何处理
+		keep-alive : 不哟啊马上关闭，保持一小段链接时间
+		closed	： 马上关闭
+
+
+	请求行，请求头
+2. POST请求头
+	1. Content-Type: application/x-www-form-urlencoded
+					
+					 multipart/form-data
+	2. Cache-Control: max-age=0
+
+3. Get请求有哪些
+	1. form标签method=get
+	2. a标签
+	3. link标签引入css
+	4. script标签引入js文件
+	5. img标签引入图片
+	6. iframe引入html页面
+	7. 地址栏输入地址回车
+	
+4. post请求
+	form标签method=post
+	
+5. 响应http协议格式
+	1. 响应行
+		1. 响应协议，和版本号
+		2. 响应状态码 : 
+			200 ：请求成功
+			302 ：请求重定向 
+			404 ：请求服务器收到了，但是数据不存在
+			500 ：表示服务器已经收到了请求但是服务器内部错误
+		3. 响应状态描述符 : 对状态的解释
+	
+	2. 响应头
+		1. key：vlaue 不同的响应头有不同的含义
+		空行
+	
+	3. 响应体
+		回传给客户端的内容
+
+6. MIME类型说明
+HTTP协议中的数据类型multipurpose internet Mail extensions
+格式 大类型/小类型 并与某种文件的扩展名相对应
+常见的MIME类型
+	.html	text/html
+	.txt	txt/plain
+	.rtf	application/rtf
+	.gif	image/gif
+	.jpg	image/jpeg
+	.au 	audio/basic
+	.mid	audio/midi
+	.ra.ram	audio/x-pn-realaudio
+	.mpg	video/mpeg
+	.avi	video/x-msvideo
+	.gz		application/x-gzip
+	.tar	application/x-tar
+	
+	
+7. HTTPServletRequest类
+	只要有请求进入tomcat服务器，tomcat服务器就会吧请求来的http协议信息解析好封装到Request对象中
+	然后就传递给service方法，我们可以通过这个对象来获得请求的所有信息
+	
+	1. 基本方法
+		getRequestURL()
+		getRequestURI()
+		getRemoteHost()
+		getHeader()
+		getParameter()
+		getParameterValues()
+		getMethod()
+		setAttribute(key,value)
+		getAttribute(key)
+		getRequestDispather()
+	
+8. 请求的转发
+	服务器收到请求后从一个服务器资源跳到另一个资源的操作叫做请求转发
+	1. 转发可以转发到WEB-INF 目录中
+	2. 不可以转发到工程以外的资源
+	
+9. base标签
+	1. 所有的相对路径工作的时候都参照浏览器地址栏的地址
+	2. 设置当前页面中的相对路径工作是，参照哪个路径进行跳转
+	base标签最后的斜杠不能省略
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
