@@ -154,16 +154,130 @@ HTTP协议中的数据类型multipurpose internet Mail extensions
 9. base标签
 	1. 所有的相对路径工作的时候都参照浏览器地址栏的地址
 	2. 设置当前页面中的相对路径工作是，参照哪个路径进行跳转
+	base标签最后的斜杠不能省略
+	
+10. / 的不同含义
+	1. 被浏览器解析，得到的是http://ip:port/
+	2. 被服务器解析，得到的是http://ip:port/工程路径
+		特殊情况，response.sendRediect("/"),把斜杠发送给浏览器解析，得到http://ip:port/
+
+### HttpServletResponse 类
+和Request类一样，每一次请求进来，tomcat服务器都会创建一个Response对象，传递给Servlet程序使用 
+
+	1. 两个输出流的说明
+		
+		1. 字节流 getOutputStream() 常常用于下载（传递二进制数据）
+		
+		2. 字符流 getWrite() 		常常用于回传字符串		
+		
+		3. 两个流只能同时使用一个,否则会报错
+		
+		
+		
+### 请求重定向
+特点：
+	1. 浏览器地址会改
+	2. 两次请求
+	3. 不会共享域
+	4. 可以重定向到站外地址
+	5. 使用sendRedirect方法可以实现直接跳转
 	
 	
+
+
+### JAVAEE 服务器三层架构
+1. Web层： 		视图展现层
+2. service层： 	业务层
+3. Dao层： 		持久层	
+
+![](image/1.jpg)
+	
+![](image/2.jpg)
+	
+开发流程
+	1. 创建数据库模块和表
+	2. 编写与数据库表对应的javabean对象
+	3. 编写DAO 持久层 
+	4. BaseDao,dao接口，dao实现
+	5. 编写userService和测试
+	6. 编写servlet层
+	
+
+### JSP
+java server page java的服务器页面
+jsp主要作用是代替servlet程序回传html页面的数据，因为用servlet回传机器的麻烦
+
+1. jsp页面本质上是一个servlet程序
+	本质就是获取输出流，然后写入html的代码
+
+2. jsp头部的page指令
+	用来修改jsp页面的一些重要的属性，或者行为
+	1. 	language		支持语言
+	2. 	contentType		返回数据类型
+	3. 	pageEncoding	jsp页面本身的字符集
+	4. 	import			导入包，或者类
+	5.	autoFlush		out输出流使用，设置缓冲区是否自动刷新
+	6. 	buffer			设置缓冲区大小默认8kb
+	7. 	errorPage		出错的时候跳转的页面
+	8. 	isErrorPage		设置当前的jsp页面是否是jsp页面
+	9. 	session			访问当前的jsp页面是否会创建session对象，默认为true
+	10.	extends			设置jsp翻译出来的java类默认继承谁
+
+3. 常用的jsp脚本
+	
+	1. 声明脚本 <%! 声明java代码 %> 可以给jsp翻译出来的java类定义属性和方法，甚至是静态代码块，内部类等
+		1. 声明属性
+		2. 声明静态代码块
+		3. 声明方法
+		4. 声明内部类
+		
+	2. 表达式脚本 <%= 在jsp页面上输出数据%>
+		会被放在out.print() 方法里面
+		
+	3. 代码脚本<%java语句%>
+		可以编写自己需要的功能
+		
+	4. 脚本可以组合使用，随便用，非常灵活
+	
+	5. jsp的九大内置对象
+		1. request 		请求对象
+		2. response		响应对象
+		3. pageContext	jsp的上下文对象
+		4. session		会话对象
+		5. application	servletContext对象
+		6. config		servletConfig对象
+		7. out			jsp输出流对象
+		8. page 		指向当前jsp的对象
+		9. exception	异常对象
+		
+	6. 四大域对象
+		1. PageContext,Request,Session,Application
+		2. 分别是，当前jsp范围内有效，一次请求有效，一次会话有效（打开浏览器访问服务器，知道关闭浏览器），整个web工程范围内都有效（只要web工程不销毁，都在）
+	
+	7. out和response的区别
+		1. out缓冲区不是直接输出到页面而是放在response缓冲区的末尾 out.flush()
+		
+	8. jsp的常用标签
+		1. 静态包含 <%@include file="" %> : 直接把被包含页面的内容拷贝过来
+		2. 动态包含
+		3. jsp转发 <jsp:forward page=""></>
+		
+### Listener监听器
+监听某种事务的变化，然后通过回调函数，反馈给客户程序去做一些响应的处理	
+1. ServletContextListener可以监听servletContext对象的创建和销毁
+	会调用响应的方法
 	
 	
+### EL 表达式 与 JSTL 标签库
+1. EL expression Language  表达式语言
+	主要用来代替jsp页面张的表达式脚本
 	
-	
-	
-	
-	
-	
-	
-	
-	
+2. EL  表达式的格式为${表达式} 
+
+3.EL表达式主要是在jsp页面中输出数据。主要是输出域对象中的数据。
+
+
+
+
+
+
