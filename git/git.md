@@ -12,4 +12,33 @@
 ![发展历史](image/evolution.jpg)
 
 4. Git的工作机制
-	工作区 --git add --> 暂存区 --git commit --> 本地库
+	工作区 --git add --> 暂存区 --git commit --> 本地库 --- git push ---> 远程库
+
+5. Git和代码托管中心
+	
+6. Git的常用命令
+	git config --global user.name
+	git config --global user.email
+	git reflog
+	git reset --hard 版本穿梭
+
+7. Git branch 
+	Branching means you diverge from the main line of development and continue to do work without messing with that main line.
+
+	command:
+		git branch NAME  : to create a branch
+		git branch -v    : check branch
+		git checkout NAME: switch to branch
+		git merge NAME 	 : merge the NAME branch to current branch 
+
+
+8. Workflow
+	innerteam
+	1. push ---> clone ,push  ---> pull 
+	
+	cross teams
+	2.   team 1 ----> fork ---> team2
+			<---- pull request<-----
+
+9. Git lab 
+...
