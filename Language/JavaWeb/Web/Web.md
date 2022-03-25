@@ -272,14 +272,43 @@ jsp主要作用是代替servlet程序回传html页面的数据，因为用servle
 1. EL expression Language  表达式语言
 	主要用来代替jsp页面张的表达式脚本
 	
-2. EL表达式的格式为${表达式} 
+2. EL  表达式的格式为${表达式} 
 
-3. EL表达式主要是在jsp页面中输出数据。主要是输出域对象中的数据。 
-	优先级从作用域的从小到大的顺序输出的
-
+3.EL表达式主要是在jsp页面中输出数据。主要是输出域对象中的数据。
 
 
 
 
+### Cookie 和 Session
+1. 什么是cookie 
 
+2. response.setCookie，通过响应头的set-cookie字段来设置的
+
+3. Cookie的生命控制 
+	setMaxAge()
+		正数，表示在指定秒数后过期
+		负数，默认情况，表示浏览器关闭后就消失
+		0，表示删除这个cookie 
+
+4. Path属性
+	可以有效的过滤，哪些Cookie可以发送给服务器，哪些不发，
+	path属性是通过请求的地址来进行有效过滤的
+	
+2. session 是一个接口HttpSession
+	session就是会话，用来维护一个客户端和服务器之间关联的一种技术
+	每个客户端都有自己的一个session会话
+	session中我们经常用来保存用户登录之后的信息
+
+3. 如何创建和获取session
+	创建和获取session的api是一样的 request.getsession()
+	第一此调用是创建session会话，之后调用都是获取前面创建好的session会话
+	isNew() 来判断是否为刚创建出来的session
+	getId()来获取session会话的id
+
+4. session 的生命周期的设置
+	删除session使用session.invalidate();
+
+5. 浏览器和服务器的session的技术关联
+	JSESSIONID=996EFAEE0D64874249792D00710B48F8;（id） Path=/cs; HttpOnly
+	session是存在服务器内存之中的，但是不保存id，浏览器访问的时候将id传入
 
