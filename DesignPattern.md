@@ -1,0 +1,7 @@
+- Factory Pattern
+	- A Factory pattern or Factory Method Pattern says that just define an interface or abstract class for creating an object but let the subclasses decide which class to instaniate
+	- Spring Bean Container
+	- Factory pattern is to create a interface for you to use, the different factory create different actual class but they all implement the interface.
+- Template Pattern 
+	- A Template Pattern says that "just define the skeleton of a function in an operation, deferring some steps to its subclasses"
+	- It is very common technique for reusing the code.This is only the main benefit of it.
