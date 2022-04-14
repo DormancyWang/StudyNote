@@ -552,58 +552,345 @@ protected <T> T doGetBean(
 ### spring注解驱动开发
 1. 容器
 
-- AnnotationConfigApplicationContext
+- @Configuration,@Bean
+	- ![](imgs/Bean.jpg)
+- @ComponentScan
+	- ![](imgs/ComponentScan.jpg)
 
-- @Bean
+- @Import
+	+ 给容器中快速导入bean
 
-- @Lazy
+- ImportSelector
 
-- @Conditional 
+- FactoryBean注册bean &开头注册工厂bean
+
+- bean的声明周期
+	+ 初始化，销毁方法
+	+ 实现InitializingBean,DisposableBean接口
+	+ @PostConstruct,@PreDestory
+	+ BeanPostProcessor
+	
+```java
+
+populateBean(beanName, mbd, instanceWrapper);----> initializationBean()
+
+
+if (mbd == null || !mbd.isSynthetic()) {
+			
+			//调用前置处理器
+			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+		}
+
+		try {
+			
+			//调用方法
+			invokeInitMethods(beanName, wrappedBean, mbd);
+
+
+
+
+			protected void invokeInitMethods(String beanName, Object bean, @Nullable RootBeanDefinition mbd)
+			throws Throwable {
+					boolean isInitializingBean = (bean instanceof InitializingBean);
+					if (isInitializingBean && (mbd == null || !mbd.isExternallyManagedInitMethod("afterPropertiesSet"))) {
+						if (logger.isTraceEnabled()) {
+							logger.trace("Invoking afterPropertiesSet() on bean with name '" + beanName + "'");
+						}
+						if (System.getSecurityManager() != null) {
+							try {
+								AccessController.doPrivileged((PrivilegedExceptionAction<Object>) () -> {
+									((InitializingBean) bean).afterPropertiesSet();
+									return null;
+								}, getAccessControlContext());
+							}
+							catch (PrivilegedActionException pae) {
+								throw pae.getException();
+							}
+						}
+						else {
+							((InitializingBean) bean).afterPropertiesSet();
+						}
+					}
+
+					if (mbd != null && bean.getClass() != NullBean.class) {
+						String initMethodName = mbd.getInitMethodName();
+						if (StringUtils.hasLength(initMethodName) &&
+								!(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
+								!mbd.isExternallyManagedInitMethod(initMethodName)) {
+							invokeCustomInitMethod(beanName, bean, mbd);
+						}
+					}
+				}
+				
+
+
+
+
+
+		}
+		catch (Throwable ex) {
+			throw new BeanCreationException(
+					(mbd != null ? mbd.getResourceDescription() : null),
+					beanName, "Invocation of init method failed", ex);
+		}
+		if (mbd == null || !mbd.isSynthetic()) {
+			//调用后置处理器
+			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+		}
+```
+
+
+- BeanPostProcessor的使用
+
+spring底层对其的使用
+
+aware接口，例如ApplicationContextAware可以将容器注入到bean中，也就是aware感知的意思。那么这个工作是谁做的呢？
+
+就是ApplicationCOntextAwareProcessor做的，实现了beanpostpricessor
+![](imgs/spring-postprocessor.JPG)
+bean的赋值，注入其他组件，@AutoWired，声明周期注解，。。。。都是使用beanPostprocessor完成的。
+
+
+
+- @Value为属性赋值,@PropertySource导入配置文件
+    1. 基本数值
+    2. SpEL：#{}
+    3. ${}:环境变量中的值
+
+- @Autowired，@Qualifier@Primary
+```java
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Autowired {
+
+	/**
+	 * Declares whether the annotated dependency is required.
+	 * <p>Defaults to {@code true}.
+	 */
+	boolean required() default true;
+
+}
+```
+
+
+- @Resource,@Inject
+
+
+- Aware
+	+ 自定义组件实现xxxxAware接口即可
+	+ ![](imgs/AwareInterface.png) 
+	
+- Profile
+	- Spring为我们提供的可以根据当前环境，动态的激活和切换一系列组件的功能
+	- 开发环境，测试环境，生产环境
+		+ 数据源的切换
 ```java
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Conditional {
-	/**
-	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
-	 * in order for the component to be registered.
-	 */
-	Class<? extends Condition>[] value();
-
-}
-public interface Condition {
+@Conditional(ProfileCondition.class)
+public @interface Profile {
 
 	/**
-	 * Determine if the condition matches.
-	 * @param context the condition context
-	 * @param metadata the metadata of the {@link org.springframework.core.type.AnnotationMetadata class}
-	 * or {@link org.springframework.core.type.MethodMetadata method} being checked
-	 * @return {@code true} if the condition matches and the component can be registered,
-	 * or {@code false} to veto the annotated component's registration
+	 * The set of profiles for which the annotated component should be registered.
 	 */
-	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+	String[] value();
 
 }
 ```
-![](imgs/ConditionContext.jpg)
 
-- @Import
+## AOP
+aop 给容器注册了什么组件，什么时候工作，这个组件的功能是什么
+- @EnableAspectJAutoProxy:
 ```java
-/**
-	 * {@link Configuration @Configuration}, {@link ImportSelector},
-	 * {@link ImportBeanDefinitionRegistrar}, or regular component classes to import.
-	 */
-	Class<?>[] value();
-```
 
-- FactoryBean & BeanFactory 
-```java
-BeanFactory.java
+1.-------------------------------------------------------------------------------------------------------------------------
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(AspectJAutoProxyRegistrar.class)
+public @interface EnableAspectJAutoProxy {
 	/**
-	 * Used to dereference a {@link FactoryBean} instance and distinguish it from
-	 * beans <i>created</i> by the FactoryBean. For example, if the bean named
-	 * {@code myJndiObject} is a FactoryBean, getting {@code &myJndiObject}
-	 * will return the factory, not the instance returned by the factory.
+	 * Indicate whether subclass-based (CGLIB) proxies are to be created as opposed
+	 * to standard Java interface-based proxies. The default is {@code false}.
 	 */
-	String FACTORY_BEAN_PREFIX = "&";
+	boolean proxyTargetClass() default false;
+
+	/**
+	 * Indicate that the proxy should be exposed by the AOP framework as a {@code ThreadLocal}
+	 * for retrieval via the {@link org.springframework.aop.framework.AopContext} class.
+	 * Off by default, i.e. no guarantees that {@code AopContext} access will work.
+	 * @since 4.3.1
+	 */
+	boolean exposeProxy() default false;
+}
+
+2.-------------------------------------------------------------------------------------------------------------------------
+class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
+	/**
+	 * Register, escalate, and configure the AspectJ auto proxy creator based on the value
+	 * of the @{@link EnableAspectJAutoProxy#proxyTargetClass()} attribute on the importing
+	 * {@code @Configuration} class.
+	 */
+	@Override
+	public void registerBeanDefinitions(
+			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+		//注册AspectJAnnotationAutoProxyCreator
+		AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
+		//获取注解的信息做一些处理
+		AnnotationAttributes enableAspectJAutoProxy =
+				AnnotationConfigUtils.attributesFor(importingClassMetadata, EnableAspectJAutoProxy.class);
+		if (enableAspectJAutoProxy != null) {
+			if (enableAspectJAutoProxy.getBoolean("proxyTargetClass")) {
+				AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
+			}
+			if (enableAspectJAutoProxy.getBoolean("exposeProxy")) {
+				AopConfigUtils.forceAutoProxyCreatorToExposeProxy(registry);
+			}
+		}
+	}
+
+}
+
+3.-------------------------------------------------------------------------------------------------------------------------
+@Nullable
+	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry) {
+		return registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry, null);
+	}
+
+	@Nullable
+	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
+			BeanDefinitionRegistry registry, @Nullable Object source) {
+
+		return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
+	}
+
+4.-------------------------------------------------------------------------------------------------------------------------
+private static BeanDefinition registerOrEscalateApcAsRequired(
+			Class<?> cls, BeanDefinitionRegistry registry, @Nullable Object source) {
+
+		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+
+		if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+			BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+			if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
+				int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());
+				int requiredPriority = findPriorityForClass(cls);
+				if (currentPriority < requiredPriority) {
+					apcDefinition.setBeanClassName(cls.getName());
+				}
+			}
+			return null;
+		}
+
+		RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
+		beanDefinition.setSource(source);
+		beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);
+		beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
+		return beanDefinition;
+	}
+
+
+所以就是在bean容器里面注册了一个AnnotationAwareAspectJAutoProxyCreator类名字叫 internalAutoProxyCreator
+
 ```
+
+![](imgs/APC.jpg)
+执行流程   
+
+
+- 传入配置类创建容器
+- 注册配置类调用refresh()方法
+	+ 注册bean的后置处理器，来方便拦截bean的创建
+		* 获取ioc容器中已经定义的需要创建对象的后置处理器
+		* 给容器中加一些别的后置处理器
+		* 分离后置处理器，实现了PriorityOrder,Order,...
+		* 优先注册PriorityORder接口的后置处理器，然后order，然后。。。。
+		* 首先在缓存中获取，获取不到就创建
+			- 创建internalAutoProxyCreator 也就是AnnotationAwareAspectJAutoProxyCreator
+			- 创建bean实例
+			- populate(bean)给bean赋值
+			- initializeBean()初始化bean
+				+ invokeAwareMethods：判断是否实现了Aware接口，如果是就给他注入
+					* 调用setbeanFatory
+					* 调用initFactory 包装了一下
+				+ applyBeanPostProcessorsBeforeInitialization：后置处理器的前初始化方法
+				+ invokeInitMethods：初始化方法
+				+ applyBeanPostProcessorsAfterInitialization：后置处理器的后初始化方法
+		* 把BeanPostProcessor注册到BeanFactory中
+		
+
+============以上是创建和注册也就是AnnotationAwareAspectJAutoProxyCreator的过程      
+AnnotationAwareAspectJAutoProxyCreator是InstantiationAwareBeanPostProcessor这种处理器    
+refresh里面    
+
+- finishBeanFactoryInitialization(beanFactory);创建剩下的单实例bean
+	- 遍历获取容器中所有的bean依次创建对象getBean(beanName)
+		getBean->doGetBean()->getSingleton()
+	- 创建bean
+		+ 先从缓存中获取bean，获取不到再创建
+		+ CreateBean（）
+			* resolveBeforeInstantiation 解析，// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.，如果能就就使用代理对象不能就调用doCreateBean
+				- applyBeanPostProcessorsBeforeInstantiation
+				- applyBeanPostProcessorsAfterInitialization：这两个方法就会返回代理对象
+```java
+	protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
+		Object bean = null;
+		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
+			// Make sure bean class is actually resolved at this point.
+			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				Class<?> targetType = determineTargetType(beanName, mbd);
+				if (targetType != null) {
+
+					1.--------------------------------------------------------------------
+					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
+					if (bean != null) {
+						2.----------------------------------------------------------------
+						bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+					}
+				}
+			}
+			mbd.beforeInstantiationResolved = (bean != null);
+		}
+		return bean;
+	}
+```
+
+- 每一个bean创建之前，调用postProcessBeforInstantiation
+	+ 关心 bean和切面bean的创建
+		* 判断bean是否在adviseBeans中 保存了所有增强bean
+		* 判断bean是否是基础类型的 Advice Pointcut Advisor AopInfrastructureBean
+		* 是否需要跳过
+	- 创建对象
+		+ return wrapIfNecessary(bean, beanName, cacheKey);
+			* 获取当前bean的所有增强器（通知方法）
+			* 不为空则把bean放在advisedBeans中
+			* 创建代理对象
+				- 获取所有增强器
+				- 保存到proxyFactory
+				- 创建代理对象JdkDynamicAopProxy,ObjenesisCglibAopProxy	
+		
+- 目标方法的执行
+	+ 容器中保存了组件的代理对象
+		* cglibaopproxy.intercept()
+		* 根据proxyfactory对象获取要执行的目标方法连接器连List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
+			- 遍历所有的增强器，转换为Interceptor
+		* 如果没有拦截器链，直接调用方法，
+		* 有拦截器链，把需要执行的目标对象，目标方法，拦截器练等信息传入CglibMethodInvocation对象，并且调用其proceed();方法
+
+### 声明式事务
+- EnableTransactionManagement：@Import({TransactionManagementConfigurationSelector.class})
+	+ 导入了AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration
+![](imgs/1.jpg)
+
+
+### 扩展原理
+
+#### BeanFactoryPostProcessor
+
+- BeanPostProcessor:bean创建对象初始化前后进行拦截工作
+- BeanFactoryPostProcessor：是BeanFactory创建前后进行的
+
+https://developer.aliyun.com/article/766880#slide-8
