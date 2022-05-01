@@ -1,0 +1,54 @@
+java.util.Arrays
+	various methods for manipulating arrays,static factory  arrays to be viewed as lists
+	
+	1. 	asList
+	2. 	binarysearch
+	3. 	compare
+	4. 	compareUnsigned
+	5. 	copyOf
+	6. 	copyOfRange
+	7. 	deepEquals
+	8. 	deepTostring
+	9. 	equals
+	10. fill
+	11. hashCode
+	12.	mismatch
+	13.	parallelPrefix
+	14.	parallelSetAll
+	15.	parallelSort -> Dual-Pivot Quicksort
+	16. setAll
+	17.	sort
+	18. spliterator
+	19. stream
+	20. toString
+	
+java.lang.String
+	1. Constructor: 空参，StringBuilder，byte[] Charset,char[]
+	2. charAt
+	3. chars : return IntStream
+	4. codePointAt
+	5. compareTo
+	6. compareToIgnoreCase
+	7. concat
+	8. contains
+	9. copyValueOf
+	10. endsWith
+	11. equals
+	12. format
+	13. getBytes
+	14. indexOf
+	15. isBlanck
+	16. isEmpty
+	17. join
+	18. lastIndexOF
+	19. length
+	20. matches
+	21. replace
+	22. valueOf
+
+java.io.Seriable 
+	1. 五个特殊的方法和一个serialVersionUID
+
+
+java.util.Stream
+	

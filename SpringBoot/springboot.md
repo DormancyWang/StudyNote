@@ -994,3 +994,130 @@ B： /my/1
 - JdbcTemplateAutoConfiguration spring自带jdbc工具配置
 - JndiDataSourceAutoConfiguration
 - XADataSourceAutoConfiguration 分布式事务配置
+
+#### 单元测试
+
+1. Junit5的变化
+	- JUnit Platform
+	- JUnit Jupiter
+	- JUnit Vintage ： 支持老版本的junit
+	- SpringBoot2.4以上的版本移除了默认对Vintage的依赖，需要的话需要自己导入
+	- @SpringBootTest和@Test
+
+2. Junit5的注解
+	- @Test
+	- @ParameterizedTest
+	- @RepeatedTest
+	- @DisplayName
+	- @BeforeEach
+	- @AfterEach
+	- @BeforeAll
+	- @AfterAll
+	- @Tag
+	- @Disabled
+	- @Timeout
+	- @ExtendWith
+
+3. 断言    
+	1. 简单断言
+	2. 数组断言: assertArrayEquals
+	3. 组合断言： assertAll
+	4. 断言异常：
+		```java
+			 ArithmeticException exception = Assertions.assertThrows(
+           //扔出断言异常
+            ArithmeticException.class, //这里放需要检测的代码() -> System.out.println(1 % 0)
+            );
+
+			
+		```
+	5. 超时断言
+	6. 快速失败
+
+4. assumptions：不满足会终止执行，而不会失败
+5. 嵌套测试 @nested:内层的测试可以驱动外层的测试，外层不能驱动内层
+6. 参数化测试参数化测试是JUnit5很重要的一个新特性，它使得用不同的参数多次运行测试成为了	可能，也为我们的单元测试带来许多便利。
+7. migration   
+最后两个直接看官方文档吧
+
+#### 指标监控
+
+1. 简介   
+未来每一个微服务在云上部署以后，我们都需要对其进行监控、追踪、审计、控制等。SpringBoot就抽取了Actuator场景，使得我们每个微服务快速引用即可获得生产级别的应用监控、审计等功能。   
+
+```xml
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+2. actuator后面的叫Endpoints 叫可监控事件 ，比如health
+3. springboot两个expose策略 http , jmx
+4. 默认jmx暴露的多，换成http需要配置，看官方文档吧
+5. 定制endpoint
+	```
+	extends AbstractHealthIndicator
+	builder.up();
+	builder.down();
+	```
+	- 自定义health
+	- 自定义 info
+	- 自定义mtrix
+
+### 特性
+
+1. Profile功能   
+	- 为了多环境适配
+	- 默认配置文件任何时候都会最先加载
+	- 指定环境配置文件application-{env}.yaml
+	- 激活指定的环境
+		+ 配置文件激活
+		+ 命令行激活 命令行优先
+	- @Profile条件装配功能
+2. 外部化配置
+	- 看文档
+
+3. 自定义starter
+
+
+### springboot 的启动原理
+
+1. 首先构造一个SpringApplication
+	- 主要就是初始化一些参数
+	- 一个工具类ClassUtils
+	- 初始启动器 bootstrapRegistryInitializers 引导器
+	- 再设置初始化器
+	- 设置监听器
+	- 推断主程序类
+2. 在调用run()方法
+	- 获取引导配置上下文，在期内调用引导组件的引导方法
+	- 设置headless模式
+	- 获取所有的运行时监听器
+	- 遍历所有的listeners，调用starting方法
+	- 保存命令行参数
+	- 准备环境信息
+		+ 返回或者创建一个基础环境信息
+		+ 配置环境信息
+		+ 绑定外部信息源
+		+ 通知所有的 listeners 监听器，环境准备完成
+	- 配置需要忽略的bean信息
+	- 打印Banner
+	- 创建ioc容器 ApplicationContext
+		+  通过applicationContextFactory来创建一个ioc容器
+		+  如果是servlet就返回 AnnotationConfigServletWebServerApplicationContext这个容器
+	+ 设置开始时间
+	+ 准备ioc环境信息
+		* 保存环境信息
+		* 后置处理流程
+		* 应用初始化器
+			- 遍历所有的initializer，调用他的方法，来对ioc容器进行初始化扩展 
+		* 通知所有的 listeners 准备上下文完毕
+		* 通知所有的 listeners 上下文加载完毕
+	+ 刷新ioc容器
+		* 调用ioc容器的refresh方法
+	+ 调用afterRefresh方法，默认为空方法
+	+ 通知所有 listeners 当前项目启动完成
+	+ 调用所有的Runners
+		* 获取applicationRunner 和 CommandLineRunner，调用
+	+ 通知 listeners 已经在运行中
