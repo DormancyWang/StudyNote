@@ -263,4 +263,29 @@ jdk 8 以前，方法区放在jvm内存里。8 之后放在native heap 里，改
 	- 同步所持有的对象
 	- 虚拟机内部的引用
 
-4. 
+
+### ClassLoader
+1. SercureClassLoader
+2. URLClassLoader:
+	1. ExtClassLoader
+	2. AppClassLoader
+
+3. Class.forName vs ClassLoader.loadClass 一个主动使用一个被动使用
+
+
+
+### 双亲委派的破坏
+1. 优势
+	- 保护核心api的源码不被替换
+	- JDK 提供了一层保护机制，defineClass里面有一个predefine方法提供了保护
+2. 弊端
+	
+
+### SPI
+1. Service Provider Interface 是Java提供的一套用来被第三方实现或者扩展的API
+
+
+
+
+### 性能监控与调优
+1. 
